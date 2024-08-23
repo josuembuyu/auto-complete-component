@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import React, { ReactNode } from "react";
 
 type Props = {
   Loading: ReactNode;
@@ -6,13 +6,13 @@ type Props = {
   isLoading: boolean;
 };
 
-const Loader: React.FC<Props> = ({ Loading, children, isLoading }) => {
-  return (
+const Loader: React.FC<Props> = React.memo(
+  ({ Loading, children, isLoading }) => (
     <>
       {children}
       {isLoading && Loading}
     </>
-  );
-};
+  )
+);
 
 export default Loader;
