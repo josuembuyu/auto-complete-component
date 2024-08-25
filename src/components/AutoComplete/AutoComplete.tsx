@@ -13,7 +13,6 @@ type Props = {
 
 const AutoComplete: React.FC<Props> = ({ data, placeholder, onSelect }) => {
   const [query, setQuery] = useState<string>("");
-  const [isFocused, setIsFocused] = useState<boolean>(false);
   const [selectedValue, setSelectedValue] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -34,8 +33,10 @@ const AutoComplete: React.FC<Props> = ({ data, placeholder, onSelect }) => {
     loading,
     hasNoResults,
     highlightedIndex,
+    isFocused,
     setHighlightedIndex,
     handleInputChange,
+    setIsFocused,
     handleKeyDown,
   } = useAutoComplete(data, query, handleSelect);
 
@@ -59,7 +60,7 @@ const AutoComplete: React.FC<Props> = ({ data, placeholder, onSelect }) => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [setIsFocused]);
 
   return (
     <div ref={containerRef} className={styles.container}>
@@ -80,6 +81,7 @@ const AutoComplete: React.FC<Props> = ({ data, placeholder, onSelect }) => {
           onKeyDown={handleKeyDown}
           onClick={handleFocus}
         />
+
         <Dropdown
           isFocused={isFocused}
           hasNoResults={hasNoResults}

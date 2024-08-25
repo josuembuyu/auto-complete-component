@@ -1,4 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
+import { useAutoCompleteContext } from "../context/AutoCompleteProvider";
+
+const itemHeight = 35;
 
 export const useAutoComplete = (
   data: string[],
@@ -9,6 +12,16 @@ export const useAutoComplete = (
   const [loading, setLoading] = useState<boolean>(false);
   const [hasNoResults, setNoResults] = useState<boolean>(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
+  const [isFocused, setIsFocused] = useState<boolean>(false);
+
+  const {
+    startIndex,
+    endIndex,
+    scrollTop,
+    setScrollTop,
+    setEndIndex,
+    setStartIndex,
+  } = useAutoCompleteContext();
 
   const filterData = useCallback(
     async (query: string) => {
@@ -23,12 +36,13 @@ export const useAutoComplete = (
           setLoading(false);
         }, 1000);
       } catch (error) {
-        console.error("Failed to fetch data:", error);
         setLoading(false);
       }
     },
     [data, loading]
   );
+
+  const visibleItems = filteredData.slice(startIndex, endIndex);
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,43 +51,64 @@ export const useAutoComplete = (
     []
   );
 
+  console.log(visibleItems);
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault();
-          setHighlightedIndex((prevIndex) =>
-            Math.min(prevIndex + 1, filteredData.length - 1)
-          );
+          if (highlightedIndex + 1 >= endIndex) {
+            setStartIndex(startIndex + 1);
+            setEndIndex(endIndex + 1);
+            setScrollTop(scrollTop + itemHeight);
+          } else {
+            setHighlightedIndex((prevIndex) => prevIndex + 1);
+          }
           break;
         case "ArrowUp":
           e.preventDefault();
-          setHighlightedIndex((prevIndex) => Math.max(prevIndex - 1, 0));
+          if (highlightedIndex <= startIndex) {
+            if (startIndex > 0) {
+              setStartIndex(startIndex - 1);
+              setEndIndex(endIndex - 1);
+              setScrollTop(scrollTop - itemHeight);
+            }
+          } else {
+            setHighlightedIndex((prevIndex) => Math.max(prevIndex - 1, 0));
+          }
           break;
         case "Enter":
           if (highlightedIndex >= 0) {
-            handleSelect(filteredData[highlightedIndex], highlightedIndex);
+            handleSelect(visibleItems[highlightedIndex], highlightedIndex);
           }
           break;
         case "Escape":
           setHighlightedIndex(-1);
+          setIsFocused(false);
           break;
         default:
           break;
       }
     },
-    [filteredData, highlightedIndex, handleSelect]
+    [visibleItems, highlightedIndex, handleSelect]
   );
 
   useEffect(() => {
     filterData(query);
   }, [query]);
 
+  useEffect(() => {
+    setHighlightedIndex(startIndex);
+  }, [filterData, startIndex]);
+
   return {
     filteredData,
     loading,
     hasNoResults,
     highlightedIndex,
+    isFocused,
+    setIsFocused,
     setHighlightedIndex,
     handleInputChange,
     handleKeyDown,
