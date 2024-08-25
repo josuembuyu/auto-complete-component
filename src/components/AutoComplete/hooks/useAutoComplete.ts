@@ -13,6 +13,7 @@ export const useAutoComplete = (
   const [hasNoResults, setNoResults] = useState<boolean>(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const [isFocused, setIsFocused] = useState<boolean>(false);
+  const [currentPosition, setCurrentPosition] = useState(0);
 
   const {
     startIndex,
@@ -51,14 +52,14 @@ export const useAutoComplete = (
     []
   );
 
-  console.log(visibleItems);
-
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault();
-          if (highlightedIndex + 1 >= endIndex) {
+          if (highlightedIndex === -1) {
+            setHighlightedIndex(currentPosition);
+          } else if (highlightedIndex + 1 >= endIndex) {
             setStartIndex(startIndex + 1);
             setEndIndex(endIndex + 1);
             setScrollTop(scrollTop + itemHeight);
@@ -68,7 +69,9 @@ export const useAutoComplete = (
           break;
         case "ArrowUp":
           e.preventDefault();
-          if (highlightedIndex <= startIndex) {
+          if (highlightedIndex === -1) {
+            setHighlightedIndex(currentPosition);
+          } else if (highlightedIndex <= startIndex) {
             if (startIndex > 0) {
               setStartIndex(startIndex - 1);
               setEndIndex(endIndex - 1);
@@ -99,7 +102,7 @@ export const useAutoComplete = (
   }, [query]);
 
   useEffect(() => {
-    setHighlightedIndex(startIndex);
+    setCurrentPosition(startIndex);
   }, [filterData, startIndex]);
 
   return {

@@ -1,9 +1,24 @@
+import { useEffect, useState } from "react";
 import AutoComplete from "./components/AutoComplete/AutoComplete";
 import { AutoCompleteProvider } from "./components/AutoComplete/context/AutoCompleteProvider";
-import { data } from "./components/utils/data";
+import { data, dataFromAPI } from "./components/utils/data";
 
 function App() {
-  const handleSelect = (value: string) => {};
+  const [todos, setTodos] = useState<string[]>([]);
+
+  const handleSelect = (value: string) => {
+    console.log(value);
+  };
+
+  const getData = async () => {
+    const data = await dataFromAPI();
+
+    setTodos(data);
+  };
+
+  useEffect(() => {
+    getData();
+  }, []);
 
   return (
     <div
