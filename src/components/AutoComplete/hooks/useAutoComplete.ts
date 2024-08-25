@@ -60,9 +60,11 @@ export const useAutoComplete = (
           if (highlightedIndex === -1) {
             setHighlightedIndex(currentPosition);
           } else if (highlightedIndex + 1 >= endIndex) {
-            setStartIndex(startIndex + 1);
-            setEndIndex(endIndex + 1);
-            setScrollTop(scrollTop + itemHeight);
+            if (highlightedIndex + 1 < filteredData.length) {
+              setStartIndex(startIndex + 1);
+              setEndIndex(endIndex + 1);
+              setScrollTop(scrollTop + itemHeight);
+            }
           } else {
             setHighlightedIndex((prevIndex) => prevIndex + 1);
           }
@@ -99,7 +101,7 @@ export const useAutoComplete = (
 
   useEffect(() => {
     filterData(query);
-  }, [query]);
+  }, [query, data]);
 
   useEffect(() => {
     setCurrentPosition(startIndex);

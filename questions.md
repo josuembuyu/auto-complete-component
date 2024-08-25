@@ -4,7 +4,6 @@
 
 - Component: On the other hand, React.Component will re-render itself whenever the props change, the parent component re-renders, or if the shouldComponentUpdate() method is triggered. This approach doesn't inherently optimize the application. However, it’s simple and quick to implement, making it suitable for small UI components where re-rendering has minimal impact. Additionally, it results in cleaner code and fewer files to manage.
 
-
 Example of how using PureComponent might break the app: If a PureComponent is used with complex props, such as arrays or objects, that are mutated without changing their reference, PureComponent won't detect the changes due to its shallow comparison. As a result, the UI may not update as expected.
 
 Example usage
@@ -23,7 +22,7 @@ setTimeout(() => {
 }, 1000);
 ```
 
-Explaination 
+Explaination
 
 - The data prop is passed to MyComponent, containing an object with a title property.
 
@@ -36,7 +35,6 @@ Explaination
 - Because React.PureComponent relies on shallow comparison, the mutation of data.title does not cause a re-render in MyComponent. The component will continue displaying "Initial Title" instead of "Updated Title".
 
 - This behavior can be problematic if you expect the UI to update when an object's internal properties change without changing the object reference. To trigger a re-render in such cases, we should create a new object with the updated values and pass it as a prop, ensuring that the reference changes.
-
 
 2. Context+ShouldComponentUpdate might be dangerous.Why is that?
 
@@ -284,10 +282,6 @@ const StyledDiv = styled.div`
 <StyledDiv>Styled Text</StyledDiv>;
 ```
 
-- Tailwind CSS: Use utility-first CSS framework classes for styling.
-
-<div className="text-red-500 text-xl">Styled Text</div>;
-
 - Global CSS: Apply global styles by importing a CSS file.
 
 ```js
@@ -308,6 +302,3 @@ const serverHtmlString =
   "<p>This is <strong>bold</strong> text from the server.</p>";
 <MyComponent htmlString={serverHtmlString} />;
 ```
-
-dangerouslySetInnerHTML is React's replacement for using innerHTML in the browser DOM. It is called "dangerous" because it directly inserts the HTML string into the DOM, which can be a security risk if the content is not trusted or sanitized.
-

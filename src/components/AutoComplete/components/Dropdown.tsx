@@ -45,8 +45,6 @@ const Dropdown: React.FC<Props> = React.memo(
     }, [isFocused, scrollTop]);
 
     useEffect(() => {
-      console.log(scrollTop);
-
       const newStartIndex = Math.max(
         0,
         Math.floor(scrollTop / itemHeight) - overscan
@@ -55,8 +53,6 @@ const Dropdown: React.FC<Props> = React.memo(
         filteredData.length,
         Math.ceil((scrollTop + windowHeight) / itemHeight) + overscan
       );
-
-      console.log(scrollTop);
 
       setStartIndex(newStartIndex);
       setEndIndex(newEndIndex);

@@ -1,5 +1,5 @@
 export const data: string[] = Array.from(
-  { length: 10000 },
+  { length: 1000000 },
   (_, index) => `Item ${index + 1}`
 );
 
