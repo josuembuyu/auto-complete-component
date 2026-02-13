@@ -1,16 +1,28 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { useAutoComplete } from "../hooks/useAutoComplete";
+import { useClickOutside } from "../hooks/useClickOutside";
 import styles from "../AutoComplete.module.css";
 import Spinner from "../components/Spinner";
 import Dropdown from "../components/Dropdown";
 import Loader from "../components/Loader";
 
 type Props = {
+  /** Array of strings to be searched */
   data: string[];
+  /** Placeholder text for the input */
   placeholder: string;
+  /** Callback function when an item is selected */
   onSelect: (value: string) => void;
 };
 
+/**
+ * A reusable AutoComplete component that filters a list of strings based on user input.
+ * Features:
+ * - Debounced filtering (handled in useAutoComplete)
+ * - Keyboard navigation (ArrowUp, ArrowDown, Enter, Escape)
+ * - Click outside to close dropdown
+ * - Loading state
+ */
 const OriginalAutoComplete: React.FC<Props> = ({
   data,
   placeholder,
@@ -21,16 +33,8 @@ const OriginalAutoComplete: React.FC<Props> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleSelect = useCallback(
-    (value: string, index: number) => {
-      onSelect(value);
-      setSelectedValue(value);
-      setIsFocused(false);
-      setHighlightedIndex(index);
-      inputRef.current?.focus();
-    },
-    [onSelect]
-  );
+  // Ref to hold the selection handler to avoid circular dependencies
+  const handleSelectRef = useRef<(value: string, index: number) => void>(() => {});
 
   const {
     filteredData,
@@ -42,29 +46,43 @@ const OriginalAutoComplete: React.FC<Props> = ({
     handleInputChange,
     setIsFocused,
     handleKeyDown,
-  } = useAutoComplete(data, query, handleSelect);
+  } = useAutoComplete(data, query, (value, index) => handleSelectRef.current(value, index));
 
-  const handleFocus = () => {
+  const handleItemSelect = useCallback(
+    (value: string, index: number) => {
+      onSelect(value);
+      setSelectedValue(value);
+      setIsFocused(false);
+      setHighlightedIndex(index);
+      inputRef.current?.focus();
+    },
+    [onSelect, setIsFocused, setHighlightedIndex]
+  );
+
+  // Update the ref with the latest handler
+  // We use a ref so useAutoComplete can call this even though it's defined after
+  handleSelectRef.current = handleItemSelect;
+
+  // Use the custom hook for closing the dropdown when clicking outside
+  useClickOutside(containerRef, () => {
+    setIsFocused(false);
+  });
+
+  const handleInputFocus = () => {
     setIsFocused(true);
   };
 
+  const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newQuery = handleInputChange(e);
+    setQuery(newQuery);
+    setSelectedValue(null);
+    if (!isFocused) {
+      setIsFocused(true);
+    }
+  };
+
+  // Determine the value to display in the input
   const inputValue = selectedValue !== null ? selectedValue : query;
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
-        setIsFocused(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [setIsFocused]);
 
   return (
     <div ref={containerRef} className={styles.container}>
@@ -75,15 +93,11 @@ const OriginalAutoComplete: React.FC<Props> = ({
           type="text"
           value={inputValue}
           placeholder={placeholder}
-          onChange={(e) => {
-            setQuery(handleInputChange(e));
-            setSelectedValue(null);
-            if (!isFocused) {
-              setIsFocused(true);
-            }
-          }}
+          onChange={onInputChange}
           onKeyDown={handleKeyDown}
-          onClick={handleFocus}
+          onClick={handleInputFocus}
+          // Ensure focus is handled correctly for accessibility
+          onFocus={handleInputFocus}
         />
 
         <Dropdown
@@ -92,7 +106,7 @@ const OriginalAutoComplete: React.FC<Props> = ({
           filteredData={filteredData}
           query={query}
           highlightedIndex={highlightedIndex}
-          onSelect={(value, index) => handleSelect(value, index)}
+          onSelect={handleItemSelect}
         />
       </Loader>
     </div>
